@@ -22,6 +22,8 @@ export type LocalGuardian = {
   address: string
 }
 
+//Step-1
+
 export type Student = {
   id: string
   name: UserName
