@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { StudentServices } from './student.service'
+import Joi from 'joi'
 
 const createStudent = async (req: Request, res: Response) => {
   try {
@@ -8,6 +9,21 @@ const createStudent = async (req: Request, res: Response) => {
     //will call service func to send this data
     const result = await StudentServices.createStudentIntoDB(student)
 
+    // Creating a schema a validation joi
+    const  JoivalidationSchema = Joi.object({
+      id: Joi.string(),
+      name:{
+        firstName: Joi.string().max(20).required(),
+        middleName:Joi.string().max(20),
+        lastName:Joi.string().max(20)
+      },
+      gender:Joi.string().required().valid([])
+    })
+
+
+
+
+
     //send Response
     res.status(200).json({
       sucess: true,
@@ -15,7 +31,11 @@ const createStudent = async (req: Request, res: Response) => {
       data: result,
     })
   } catch (error) {
-    console.log(error)
+    res.status(500).json({
+      success: false,
+      message: 'Something went wrong',
+      error: error,
+    })
   }
 }
 
