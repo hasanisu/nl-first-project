@@ -1,28 +1,32 @@
 import { Request, Response } from 'express'
 import { StudentServices } from './student.service'
-import Joi from 'joi'
+import studentValidationJoiSchema from './student.joi.validation'
+import { z } from 'zod'
+import studentValidationSchema from './student.validation'
 
 const createStudent = async (req: Request, res: Response) => {
   try {
+    // Creating a schema a validation zod
+
     const student = req.body.student //old way
     // const { student: studentData } = req.body.student
-    //will call service func to send this data
-    const result = await StudentServices.createStudentIntoDB(student)
 
-    // Creating a schema a validation joi
-    const  JoivalidationSchema = Joi.object({
-      id: Joi.string(),
-      name:{
-        firstName: Joi.string().max(20).required(),
-        middleName:Joi.string().max(20),
-        lastName:Joi.string().max(20)
-      },
-      gender:Joi.string().required().valid([])
-    })
+    // Data validation using Joi
+    // const { error, value } = studentValidationJoiSchema.validate(student)
 
+    // Data Validation using ZOD
+    const zodParseData = studentValidationSchema.parse(student)
 
+    const result = await StudentServices.createStudentIntoDB(zodParseData)
 
-
+    // console.log(error, value)
+    // if (error) {
+    //   res.status(500).json({
+    //     success: false,
+    //     message: 'Something went wrong',
+    //     error: error.details,
+    //   })
+    // }
 
     //send Response
     res.status(200).json({
@@ -30,10 +34,10 @@ const createStudent = async (req: Request, res: Response) => {
       message: 'Student is created successfully',
       data: result,
     })
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: 'Something went wrong',
+      message: error.message || 'Something went wrong',
       error: error,
     })
   }
