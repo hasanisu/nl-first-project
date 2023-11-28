@@ -7,6 +7,7 @@ const router = express.Router()
 router.post('/create-student', StudentController.createStudent)
 router.get('/', StudentController.getAllStudents)
 router.get('/:studentId', StudentController.getSingleStudent)
+router.delete('/:studentId', StudentController.deleteStudent)
 
 // eikhane router take object akare pass kora hosse na karon router call kortese
 // StudentController k r controller jehetu nijei object tai

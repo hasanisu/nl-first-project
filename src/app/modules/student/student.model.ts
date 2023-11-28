@@ -11,6 +11,7 @@ import {
 import validator from 'validator'
 import bcrypt from 'bcrypt'
 import config from '../../config'
+import { boolean } from 'joi'
 
 //instance of schema
 const userNameSchema = new Schema<TUserName>({
@@ -58,61 +59,78 @@ const localGuardianSchema = new Schema<TLocalGuardian>({
 
 //Step-2
 //create a schema
-const studentSchema = new Schema<TStudent, StudentModel>({
-  id: { type: String, required: true, unique: true },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    unique: true,
-    maxlength: [10, 'Password can not be 10 charecter'],
-  },
-
-  name: { type: userNameSchema, required: true },
-  gender: {
-    type: String,
-    enum: {
-      values: ['male', 'female', 'other'],
-      message: `{VALUE} is not valid`,
+const studentSchema = new Schema<TStudent, StudentModel>(
+  {
+    id: { type: String, required: true, unique: true },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      maxlength: [10, 'Password can not be 10 charecter'],
     },
-    required: true,
+
+    name: { type: userNameSchema, required: true },
+    gender: {
+      type: String,
+      enum: {
+        values: ['male', 'female', 'other'],
+        message: `{VALUE} is not valid`,
+      },
+      required: true,
+    },
+    dateOfBirth: { type: String },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      validate: (value: string) => validator.isEmail(value),
+      message: `{VALUE} is not a valid email type`,
+    },
+    contactNo: { type: String, required: true },
+    emergencyContactNo: { type: String, required: true },
+    bloodGroup: {
+      type: String,
+      enum: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
+    },
+    presentAddress: { type: String, required: true },
+    permanentAdress: { type: String, required: true },
+    guardian: {
+      type: guardianSchema,
+      required: true,
+    },
+    localGuardian: {
+      type: localGuardianSchema,
+      required: true,
+    },
+    profileImg: { type: String, required: true },
+    isActive: {
+      type: String,
+      enum: ['active', 'blocked'],
+      default: 'active',
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
-  dateOfBirth: { type: String },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    validate: (value: string) => validator.isEmail(value),
-    message: `{VALUE} is not a valid email type`,
+  {
+    toJSON: {
+      virtuals: true,
+    },
   },
-  contactNo: { type: String, required: true },
-  emergencyContactNo: { type: String, required: true },
-  bloodGroup: {
-    type: String,
-    enum: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
-  },
-  presentAddress: { type: String, required: true },
-  permanentAdress: { type: String, required: true },
-  guardian: {
-    type: guardianSchema,
-    required: true,
-  },
-  localGuardian: {
-    type: localGuardianSchema,
-    required: true,
-  },
-  profileImg: { type: String, required: true },
-  isActive: {
-    type: String,
-    enum: ['active', 'blocked'],
-    default: 'active',
-  },
+)
+
+// Virtual
+studentSchema.virtual('fullName').get(function () {
+  return `${this.name.firstName} ${this.name.middleName} ${this.name.lastName}`
 })
+
+//// This is Document Middleware
 
 // Creating pre save middleware/hook: will work on create() and save() fucntion
 studentSchema.pre('save', async function (next) {
   // console.log(this, 'pre middleware will save the data')
 
-  const user = this
+  const user = this // this indicate current document
 
   // hashing password and save into DB
   user.password = await bcrypt.hash(
@@ -123,8 +141,26 @@ studentSchema.pre('save', async function (next) {
 })
 
 // Creating post save middleware/hook
-studentSchema.post('save', function () {
-  console.log(this, 'post hook: We saved our data')
+studentSchema.post('save', function (doc, next) {
+  doc.password = '' // password ta empty string hishebe db te save korar jonno
+  next()
+})
+
+//// This is Query Middleware
+studentSchema.pre('find', async function (next) {
+  this.find({ isDeleted: { $ne: true } })
+  next()
+})
+studentSchema.pre('findOne', async function (next) {
+  this.find({ isDeleted: { $ne: true } })
+  next()
+})
+
+////This is Aggregate Middleware
+studentSchema.pre('aggregate', async function (next) {
+  // unshift ta hosse sobar prothome eita kaj korbe
+  this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } })
+  next()
 })
 
 //Creating a custom static method
