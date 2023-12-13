@@ -9,7 +9,7 @@ import {
   TUserName,
 } from './student.interface'
 import validator from 'validator'
-import bcrypt from 'bcrypt'
+
 import config from '../../config'
 import { boolean } from 'joi'
 
@@ -61,14 +61,15 @@ const localGuardianSchema = new Schema<TLocalGuardian>({
 //create a schema
 const studentSchema = new Schema<TStudent, StudentModel>(
   {
-    id: { type: String, required: true, unique: true },
-    password: {
-      type: String,
-      required: [true, 'Password is required'],
-      maxlength: [10, 'Password can not be 10 charecter'],
+    id: { type: String, required: [true, 'Id is required'], unique: true },
+    user: {
+      type: Schema.Types.ObjectId,
+      required: [true, 'User d is required'],
+      unique: true,
+      ref: 'User',
     },
-
     name: { type: userNameSchema, required: true },
+
     gender: {
       type: String,
       enum: {
@@ -102,11 +103,6 @@ const studentSchema = new Schema<TStudent, StudentModel>(
       required: true,
     },
     profileImg: { type: String, required: true },
-    isActive: {
-      type: String,
-      enum: ['active', 'blocked'],
-      default: 'active',
-    },
     isDeleted: {
       type: Boolean,
       default: false,
@@ -122,28 +118,6 @@ const studentSchema = new Schema<TStudent, StudentModel>(
 // Virtual
 studentSchema.virtual('fullName').get(function () {
   return `${this.name.firstName} ${this.name.middleName} ${this.name.lastName}`
-})
-
-//// This is Document Middleware
-
-// Creating pre save middleware/hook: will work on create() and save() fucntion
-studentSchema.pre('save', async function (next) {
-  // console.log(this, 'pre middleware will save the data')
-
-  const user = this // this indicate current document
-
-  // hashing password and save into DB
-  user.password = await bcrypt.hash(
-    user.password,
-    Number(config.bcrypt_salt_rounds),
-  )
-  next()
-})
-
-// Creating post save middleware/hook
-studentSchema.post('save', function (doc, next) {
-  doc.password = '' // password ta empty string hishebe db te save korar jonno
-  next()
 })
 
 //// This is Query Middleware
