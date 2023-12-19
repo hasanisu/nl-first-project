@@ -1,10 +1,10 @@
 import config from '../../config'
-import { TAcademicSemester } from '../academicSemester/academicSemester.interface'
 import { AcademicSemester } from '../academicSemester/academicSemester.model'
 import { TStudent } from '../student/student.interface'
 import { Student } from '../student/student.model'
 import { TUser } from './user.interface'
 import { User } from './user.model'
+import { generateStudentId } from './user.utls'
 
 const createStudentIntoDB = async (password: string, payLoad: TStudent) => {
   // get form the model
@@ -22,25 +22,13 @@ const createStudentIntoDB = async (password: string, payLoad: TStudent) => {
   //set student role
   userData.role = 'student'
 
-  //Auto generate id
-  // year, semesterCode 4 digit number
-  const generateStudentId = (payLoad: TAcademicSemester) => {
-    //padStart hosse koi digit er number nibo oita
-    // first time 0000 hobe
-    const currentId = (0).toString()
-    let incrementId = (Number(currentId) + 1).toString().padStart(4, '0')
-    incrementId = `${payLoad.year}${payLoad.code}${incrementId}`
-
-    return incrementId
-  }
-
   //find academic semester info
-  const admissionSemester = await AcademicSemester.findById(
+  const studentAdmissionSemesters = await AcademicSemester.findById(
     payLoad.admissionSemester,
   )
 
   // set manually generated id
-  userData.id = generateStudentId(admissionSemester)
+  userData.id = await generateStudentId(studentAdmissionSemesters)
 
   // create a user
   const newUser = await User.create(userData) //built in static method
