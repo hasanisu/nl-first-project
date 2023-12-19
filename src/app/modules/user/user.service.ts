@@ -1,10 +1,12 @@
 import config from '../../config'
+import { TAcademicSemester } from '../academicSemester/academicSemester.interface'
+import { AcademicSemester } from '../academicSemester/academicSemester.model'
 import { TStudent } from '../student/student.interface'
 import { Student } from '../student/student.model'
 import { TUser } from './user.interface'
 import { User } from './user.model'
 
-const createStudentIntoDB = async (password: string, studentData: TStudent) => {
+const createStudentIntoDB = async (password: string, payLoad: TStudent) => {
   // get form the model
   //  // Using Static method
   // if (await Student.isUserExists(studentData.id)) {
@@ -20,8 +22,25 @@ const createStudentIntoDB = async (password: string, studentData: TStudent) => {
   //set student role
   userData.role = 'student'
 
+  //Auto generate id
+  // year, semesterCode 4 digit number
+  const generateStudentId = (payLoad: TAcademicSemester) => {
+    //padStart hosse koi digit er number nibo oita
+    // first time 0000 hobe
+    const currentId = (0).toString()
+    let incrementId = (Number(currentId) + 1).toString().padStart(4, '0')
+    incrementId = `${payLoad.year}${payLoad.code}${incrementId}`
+
+    return incrementId
+  }
+
+  //find academic semester info
+  const admissionSemester = await AcademicSemester.findById(
+    payLoad.admissionSemester,
+  )
+
   // set manually generated id
-  userData.id = '2030100001'
+  userData.id = generateStudentId(admissionSemester)
 
   // create a user
   const newUser = await User.create(userData) //built in static method
@@ -36,10 +55,10 @@ const createStudentIntoDB = async (password: string, studentData: TStudent) => {
   // create a student
   if (Object.keys(newUser).length) {
     // set id, _id as user
-    studentData.id = newUser.id
-    studentData.user = newUser._id //Reference _id
+    payLoad.id = newUser.id
+    payLoad.user = newUser._id //Reference _id
 
-    const newStudent = await Student.create(studentData)
+    const newStudent = await Student.create(payLoad)
     return newStudent
   }
   return newUser
