@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose'
 import { TAcademicDepartment } from './academicDepartment.interface'
 
-const academicDeapartmentSchema = new Schema<TAcademicDepartment>(
+const academicDepartmentSchema = new Schema<TAcademicDepartment>(
   {
     name: {
       type: String,
@@ -10,7 +10,7 @@ const academicDeapartmentSchema = new Schema<TAcademicDepartment>(
     },
     academicFaculty: {
       type: Schema.Types.ObjectId,
-      res: 'AcademicFaculty',
+      ref: 'AcademicFaculty',
     },
   },
   {
@@ -18,7 +18,29 @@ const academicDeapartmentSchema = new Schema<TAcademicDepartment>(
   },
 )
 
+academicDepartmentSchema.pre('save', async function (next) {
+  const isDepartment = await AcademicDepartment.findOne({
+    name: this.name,
+  })
+
+  if (isDepartment) {
+    throw new Error('This department is already exist!')
+  }
+  next()
+})
+
+// update query
+academicDepartmentSchema.pre('findOneAndUpdate', async function (next) {
+  const query = this.getQuery()
+
+  const isDepartment = await AcademicDepartment.findOne(query)
+  if (!isDepartment) {
+    throw new Error('This department does not exist!')
+  }
+  next()
+})
+
 export const AcademicDepartment = model<TAcademicDepartment>(
   'AcademicDepartment',
-  academicDeapartmentSchema,
+  academicDepartmentSchema,
 )

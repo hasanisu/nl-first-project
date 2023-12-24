@@ -17,18 +17,18 @@ const createStudentIntoDB = async (password: string, payLoad: TStudent) => {
   const userData: Partial<TUser> = {}
 
   //if password is not given, use deafult password
-  userData.password = password || (config.default_pass as string)
+  userData.password = password || (config.default_password as string)
 
   //set student role
   userData.role = 'student'
 
   //find academic semester info
-  const studentAdmissionSemesters = await AcademicSemester.findById(
+  const admissionSemester = await AcademicSemester.findById(
     payLoad.admissionSemester,
   )
 
   // set manually generated id
-  userData.id = await generateStudentId(studentAdmissionSemesters)
+  userData.id = await generateStudentId(admissionSemester)
 
   // create a user
   const newUser = await User.create(userData) //built in static method
