@@ -1,4 +1,4 @@
-import { NextFunction, RequestHandler, Response, Request } from 'express'
+import { RequestHandler } from 'express'
 import httpStatus from 'http-status'
 import sendResponse from '../../utils/sendResponse'
 import { StudentServices } from './student.service'
@@ -28,6 +28,19 @@ const getSingleStudent: RequestHandler = catchAsync(async (req, res) => {
   })
 })
 
+const updateStudent = catchAsync(async (req, res) => {
+  const { studentId } = req.params
+  const { student } = req.body
+  const result = await StudentServices.updateStudentIntoDB(studentId, student)
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Student is updated succesfully',
+    data: result,
+  })
+})
+
 //Update or delete data
 const deleteStudent: RequestHandler = catchAsync(async (req, res) => {
   const studentId = req.params.studentId
@@ -44,4 +57,5 @@ export const StudentController = {
   getAllStudents,
   getSingleStudent,
   deleteStudent,
+  updateStudent,
 }

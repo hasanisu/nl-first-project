@@ -1,14 +1,14 @@
 import express from 'express'
 import { UserController } from './user.controller'
 
-import { StudentValidations } from '../student/student.validation'
 import validateRequest from '../../middlewares/validateRequest'
+import { createStudentValidationSchema } from '../student/student.validation'
 
 const router = express.Router()
 
 router.post(
   '/create-student',
-  validateRequest(StudentValidations.createStudentValidationSchema),
+  validateRequest(createStudentValidationSchema),
   UserController.createStudent,
 )
 

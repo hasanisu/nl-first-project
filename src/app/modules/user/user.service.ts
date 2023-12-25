@@ -32,7 +32,7 @@ const createStudentIntoDB = async (password: string, payLoad: TStudent) => {
 
   // create a user
   const newUser = await User.create(userData) //built in static method
-
+  console.log(userData)
   // create instance for instance method
   // const student = new Student(studentData) // create an instance
   //   if (await student.isUserExists(studentData.id)) {

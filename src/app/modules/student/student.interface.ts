@@ -37,11 +37,12 @@ export type TStudent = {
   emergencyContactNo: string
   bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'O+' | 'O-' | 'AB+' | 'AB-'
   presentAddress: string
-  permanentAdress: string
+  permanentAddress: string
   guardian: TGuardian
   localGuardian: TLocalGuardian
   profileImg?: string
   admissionSemester: Types.ObjectId
+  academicDepartment: Types.ObjectId
   isDeleted: boolean
 }
 
